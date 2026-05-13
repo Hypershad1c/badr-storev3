@@ -9,7 +9,7 @@ import { virtualRequestSchema, type VirtualRequestInput } from "@/lib/validation
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { CheckCircle, Loader2, Upload, Zap } from "lucide-react";
+import { CheckCircle, Loader2, Zap } from "lucide-react"; // Removed 'Upload'
 import { createVirtualRequest } from "@/actions/virtual-requests";
 import toast from "react-hot-toast";
 import Link from "next/link";
@@ -23,7 +23,7 @@ export function ServiceRequestForm({ productId, productName }: ServiceRequestFor
   const { data: session } = useSession();
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [files, setFiles] = useState<string[]>([]);
+  // Removed unused 'files' and 'setFiles' state
 
   const { register, handleSubmit, formState: { errors } } = useForm<VirtualRequestInput>({
     resolver: zodResolver(virtualRequestSchema),
@@ -47,7 +47,8 @@ export function ServiceRequestForm({ productId, productName }: ServiceRequestFor
 
   const onSubmit = async (data: VirtualRequestInput) => {
     setLoading(true);
-    const result = await createVirtualRequest({ ...data, files });
+    // Removed unused files array from payload
+    const result = await createVirtualRequest({ ...data });
     if (result.error) {
       toast.error(result.error);
     } else {
@@ -68,7 +69,7 @@ export function ServiceRequestForm({ productId, productName }: ServiceRequestFor
           <CheckCircle className="h-12 w-12 text-emerald-500 mx-auto mb-3" />
           <h3 className="font-bold text-lg mb-1">Request Submitted!</h3>
           <p className="text-sm text-muted-foreground">
-            We've received your request for{" "}
+            We&apos;ve received your request for{" "}
             <span className="font-medium text-foreground">{productName}</span>. Our team
             will review it and get back to you within 24 hours.
           </p>

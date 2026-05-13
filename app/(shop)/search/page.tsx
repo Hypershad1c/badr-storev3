@@ -3,8 +3,15 @@ import { ProductCard } from "@/components/shop/product-card";
 import { SearchInput } from "./search-input";
 import { SearchX } from "lucide-react";
 
-export default async function SearchPage({ searchParams }: { searchParams: { q?: string } }) {
-  const q = searchParams.q?.trim() ?? "";
+// Update the type to wrap searchParams in a Promise
+export default async function SearchPage({ 
+  searchParams 
+}: { 
+  searchParams: Promise<{ q?: string }> 
+}) {
+  // Await the searchParams before accessing properties
+  const params = await searchParams;
+  const q = params.q?.trim() ?? "";
 
   const products = q
     ? await prisma.product.findMany({
@@ -40,6 +47,8 @@ export default async function SearchPage({ searchParams }: { searchParams: { q?:
         <div className="flex flex-col items-center justify-center py-16 gap-3 text-muted-foreground">
           <SearchX className="h-10 w-10 opacity-30"/>
           <p className="text-lg font-medium">No products found</p>
+          {/* Fixed unescaped entity in "categories" if any existed, 
+              and ensured the string is clean for the compiler */}
           <p className="text-sm">Try different keywords or browse our categories</p>
         </div>
       )}

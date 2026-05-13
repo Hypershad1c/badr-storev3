@@ -1,17 +1,20 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, use } from "react"; // Added 'use'
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { CheckCircle, Package, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cart";
 
+// Updated type to expect a Promise
 export default function CheckoutSuccessPage({
   searchParams,
 }: {
-  searchParams: { orderId?: string };
+  searchParams: Promise<{ orderId?: string }>;
 }) {
+  // Use the 'use' hook to unwrap the searchParams promise
+  const resolvedParams = use(searchParams);
   const { clearCart } = useCartStore();
 
   useEffect(() => {
@@ -33,11 +36,11 @@ export default function CheckoutSuccessPage({
         </div>
         <h1 className="text-3xl font-bold mb-3">Order Confirmed!</h1>
         <p className="text-muted-foreground mb-2">
-          Thank you for your purchase. We've sent a confirmation email with your order details.
+          Thank you for your purchase. We&apos;ve sent a confirmation email with your order details.
         </p>
-        {searchParams.orderId && (
+        {resolvedParams.orderId && (
           <p className="text-sm text-muted-foreground mb-8">
-            Order #{searchParams.orderId.slice(-8).toUpperCase()}
+            Order #{resolvedParams.orderId.slice(-8).toUpperCase()}
           </p>
         )}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

@@ -18,6 +18,7 @@ import Link from "next/link";
 import type { ProductWithCategory } from "@/types";
 import type { Review, User } from "@prisma/client";
 
+// Define custom types to include the joined user relation
 type ReviewWithUser = Review & { user: Pick<User, "name" | "avatar"> };
 type ProductDetail = ProductWithCategory & { reviews: ReviewWithUser[] };
 
@@ -35,9 +36,11 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
   const inWishlist = isInWishlist(product.id);
 
   const variants = product.variants as { colors?: { name: string; value: string }[]; sizes?: string[] } | null;
+  
   const avgRating = product.reviews.length
     ? product.reviews.reduce((s, r) => s + r.rating, 0) / product.reviews.length
     : null;
+    
   const discount = product.comparePrice
     ? Math.round(((product.comparePrice - product.price) / product.comparePrice) * 100)
     : null;
@@ -152,7 +155,7 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
           <p className="text-muted-foreground leading-relaxed mb-6">{product.shortDescription ?? product.description.slice(0, 200)}</p>
           <Separator className="mb-6" />
 
-          {/* Color Variants */}
+          {/* Variants */}
           {variants?.colors && (
             <div className="mb-5">
               <p className="text-sm font-semibold mb-2">
@@ -175,7 +178,6 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
             </div>
           )}
 
-          {/* Size Variants */}
           {variants?.sizes && (
             <div className="mb-6">
               <p className="text-sm font-semibold mb-2">
@@ -200,7 +202,7 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
             </div>
           )}
 
-          {/* Quantity + Add to Cart */}
+          {/* Actions */}
           {product.type === "PHYSICAL" ? (
             <div className="flex gap-3 mb-6">
               <div className="flex items-center border rounded-lg">
@@ -221,7 +223,6 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
             </Button>
           )}
 
-          {/* Trust badges */}
           <div className="grid grid-cols-3 gap-3">
             {[
               { icon: Shield, label: "Secure payment" },
@@ -237,12 +238,12 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
         </div>
       </div>
 
-      {/* Reviews */}
+      {/* Reviews Section */}
       {product.reviews.length > 0 && (
         <div className="mb-20">
           <h2 className="text-2xl font-bold mb-6">Reviews ({product.reviews.length})</h2>
           <div className="grid md:grid-cols-2 gap-4">
-            {product.reviews.map((review) => (
+            {product.reviews.map((review: ReviewWithUser) => (
               <div key={review.id} className="p-5 rounded-xl border bg-card">
                 <div className="flex items-center gap-1 mb-2">
                   {[1,2,3,4,5].map((s) => (
@@ -250,6 +251,7 @@ export function ProductDetailClient({ product, relatedProducts }: ProductDetailC
                   ))}
                 </div>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-3">{review.comment}</p>
+                {/* Fixed TypeScript error by using ReviewWithUser type */}
                 <p className="text-xs font-medium">{review.user.name}</p>
               </div>
             ))}

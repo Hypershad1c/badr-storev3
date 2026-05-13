@@ -1,10 +1,10 @@
 import Stripe from "stripe";
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  throw new Error("STRIPE_SECRET_KEY is not set");
+  throw new Error("STRIPE_SECRET_KEY is missing");
 }
 
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-  apiVersion: "2024-06-20",
+  apiVersion: "2025-02-24.acacia", // Updated to match the expected type
   typescript: true,
 });

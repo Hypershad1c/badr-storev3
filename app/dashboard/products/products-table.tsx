@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Pencil, Trash2, Star, Package, Zap, Search } from "lucide-react";
+import { motion } from "framer-motion";
+import { Plus, Pencil, Trash2, Package, Zap, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -37,9 +37,15 @@ export function ProductsTable({ products, categories }: ProductsTableProps) {
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
-    const result = await deleteProduct(id);
-    if (result.success) toast.success("Product deleted");
-    else toast.error(result.error || "Failed to delete");
+    
+    // Fixed: Cast the result to include the 'error' property for TypeScript
+    const result = await deleteProduct(id) as { success: boolean; error?: string };
+    
+    if (result.success) {
+      toast.success("Product deleted");
+    } else {
+      toast.error(result.error || "Failed to delete");
+    }
   };
 
   const handleToggleFeatured = async (id: string, featured: boolean) => {

@@ -7,8 +7,9 @@ export const metadata: Metadata = {
   description: "Browse our collection of premium products and digital services.",
 };
 
+// Update: searchParams is now a Promise in Next.js 15
 interface ShopPageProps {
-  searchParams: {
+  searchParams: Promise<{
     category?: string;
     type?: string;
     sort?: string;
@@ -16,38 +17,42 @@ interface ShopPageProps {
     page?: string;
     minPrice?: string;
     maxPrice?: string;
-  };
+  }>;
 }
 
 const PRODUCTS_PER_PAGE = 12;
 
 export default async function ShopPage({ searchParams }: ShopPageProps) {
-  const page = Number(searchParams.page) || 1;
+  // 1. Await the searchParams promise
+  const params = await searchParams;
+
+  const page = Number(params.page) || 1;
   const skip = (page - 1) * PRODUCTS_PER_PAGE;
 
   const where: Record<string, unknown> = {};
 
-  if (searchParams.category) {
-    where.category = { slug: searchParams.category };
+  // 2. Use the awaited 'params' instead of 'searchParams'
+  if (params.category) {
+    where.category = { slug: params.category };
   }
-  if (searchParams.type) {
-    where.type = searchParams.type;
+  if (params.type) {
+    where.type = params.type;
   }
-  if (searchParams.q) {
+  if (params.q) {
     where.OR = [
-      { name: { contains: searchParams.q, mode: "insensitive" } },
-      { description: { contains: searchParams.q, mode: "insensitive" } },
+      { name: { contains: params.q, mode: "insensitive" } },
+      { description: { contains: params.q, mode: "insensitive" } },
     ];
   }
-  if (searchParams.minPrice || searchParams.maxPrice) {
+  if (params.minPrice || params.maxPrice) {
     where.price = {
-      gte: searchParams.minPrice ? Number(searchParams.minPrice) : undefined,
-      lte: searchParams.maxPrice ? Number(searchParams.maxPrice) : undefined,
+      gte: params.minPrice ? Number(params.minPrice) : undefined,
+      lte: params.maxPrice ? Number(params.maxPrice) : undefined,
     };
   }
 
   const orderBy: Record<string, string> = {};
-  switch (searchParams.sort) {
+  switch (params.sort) {
     case "price-asc":
       orderBy.price = "asc";
       break;
@@ -80,7 +85,7 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
       total={total}
       page={page}
       totalPages={Math.ceil(total / PRODUCTS_PER_PAGE)}
-      searchParams={searchParams}
+      searchParams={params} // Pass the unwrapped params to the client
     />
   );
 }

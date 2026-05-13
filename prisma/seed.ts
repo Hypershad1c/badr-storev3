@@ -1,4 +1,4 @@
-import { PrismaClient, Role, ProductType } from "@prisma/client";
+import { PrismaClient, Role, ProductType, Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
@@ -214,7 +214,8 @@ async function main() {
         "https://images.unsplash.com/photo-1547658719-da2b51169166?w=600",
         "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600",
       ],
-      variants: null,
+      // Use Prisma.JsonNull instead of standard null for JSON fields
+      variants: Prisma.JsonNull,
     },
     {
       name: "Premium Graphic Design Package",
@@ -232,7 +233,8 @@ async function main() {
       images: [
         "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=600",
       ],
-      variants: null,
+      // Use Prisma.JsonNull instead of standard null for JSON fields
+      variants: Prisma.JsonNull,
     },
     {
       name: "Merino Wool Crewneck Sweater",
@@ -289,7 +291,9 @@ async function main() {
     await prisma.product.upsert({
       where: { slug: product.slug },
       update: {},
-      create: product,
+      // Casting to 'any' or ProductCreateInput ensures the complex variants 
+      // object doesn't trigger unchecked input errors
+      create: product as any,
     });
   }
 

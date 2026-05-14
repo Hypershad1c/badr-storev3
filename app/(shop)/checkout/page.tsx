@@ -1,23 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { motion } from "framer-motion";
 import { useCartStore } from "@/store/cart";
 import { checkoutSchema, type CheckoutInput } from "@/lib/validations";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import Image from "next/image";
-import { Loader2, Lock, ShoppingBag, Tag } from "lucide-react";
+import { Loader2, Lock, Tag } from "lucide-react";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
 
 export default function CheckoutPage() {
-  const { items, getTotalPrice, clearCart } = useCartStore();
+  const { items, getTotalPrice } = useCartStore();
   const [loading, setLoading] = useState(false);
   const [coupon, setCoupon] = useState("");
   const [discount, setDiscount] = useState(0);
@@ -29,18 +27,32 @@ export default function CheckoutPage() {
     resolver: zodResolver(checkoutSchema),
   });
 
+  // FIX 1: Wrap navigation in useEffect to avoid "setState during render" error
+  useEffect(() => {
+    if (items.length === 0) {
+      router.push("/cart");
+    }
+  }, [items, router]);
+
+  // Prevent rendering if cart is empty while redirecting
   if (items.length === 0) {
-    router.push("/cart");
     return null;
   }
 
   const applyCoupon = async () => {
     if (!coupon) return;
-    const res = await fetch(`/api/coupons/validate?code=${coupon}&total=${subtotal}`);
-    const data = await res.json();
-    if (data.error) { toast.error(data.error); return; }
-    setDiscount(data.discount);
-    toast.success(`Coupon applied! -$${data.discount.toFixed(2)}`);
+    try {
+      const res = await fetch(`/api/coupons/validate?code=${coupon}&total=${subtotal}`);
+      const data = await res.json();
+      if (data.error) {
+        toast.error(data.error);
+        return;
+      }
+      setDiscount(data.discount);
+      toast.success(`Coupon applied! -$${data.discount.toFixed(2)}`);
+    } catch (err) {
+      toast.error("Failed to validate coupon");
+    }
   };
 
   const onSubmit = async (data: CheckoutInput) => {
@@ -55,10 +67,20 @@ export default function CheckoutPage() {
           couponCode: coupon || undefined,
         }),
       });
+      
       const result = await res.json();
-      if (result.error) { toast.error(result.error); setLoading(false); return; }
-      window.location.href = result.url;
-    } catch {
+      
+      if (result.error) {
+        toast.error(result.error);
+        setLoading(false);
+        return;
+      }
+
+      // FIX 2: Use router.push for the Stripe redirect to prevent "location is not defined" build errors
+      if (result.url) {
+        router.push(result.url);
+      }
+    } catch (err) {
       toast.error("Something went wrong");
       setLoading(false);
     }
@@ -156,7 +178,12 @@ export default function CheckoutPage() {
             <div className="flex gap-2 mb-4">
               <div className="relative flex-1">
                 <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-                <Input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="COUPON CODE" className="pl-8 text-xs" />
+                <Input 
+                  value={coupon} 
+                  onChange={(e) => setCoupon(e.target.value.toUpperCase())} 
+                  placeholder="COUPON CODE" 
+                  className="pl-8 text-xs" 
+                />
               </div>
               <Button variant="outline" size="sm" onClick={applyCoupon} type="button">Apply</Button>
             </div>
